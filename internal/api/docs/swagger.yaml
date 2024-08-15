@@ -1,0 +1,357 @@
+definitions:
+  image.ResponseUploadImage:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  models.ResponseCommon:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  models.ResponseError:
+    properties:
+      error:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  task.FaceData:
+    properties:
+      age:
+        type: integer
+      bounding_box:
+        items:
+          type: integer
+        type: array
+      sex:
+        $ref: '#/definitions/task.Sex'
+    type: object
+  task.ImageData:
+    properties:
+      faces:
+        items:
+          $ref: '#/definitions/task.FaceData'
+        type: array
+      name:
+        type: string
+    type: object
+  task.RequestAddTask:
+    properties:
+      name:
+        type: string
+    type: object
+  task.RequestDeleteTask:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  task.RequestGetTask:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  task.RequestProcessTask:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  task.ResponseAddTask:
+    properties:
+      name:
+        type: string
+    type: object
+  task.ResponseDeleteTask:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  task.ResponseGetTask:
+    properties:
+      id:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/task.ImageData'
+        type: array
+      statistic:
+        $ref: '#/definitions/task.Statistic'
+      status:
+        $ref: '#/definitions/task.Status'
+    type: object
+  task.ResponseProcessTask:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      time:
+        type: string
+    type: object
+  task.Sex:
+    enum:
+    - male
+    type: string
+    x-enum-varnames:
+    - Male
+  task.Statistic:
+    properties:
+      avg_female_age:
+        type: integer
+      avg_male_age:
+        type: integer
+      face_count:
+        type: integer
+      female_count:
+        type: integer
+      male_count:
+        type: integer
+    type: object
+  task.Status:
+    enum:
+    - Being formed
+    type: string
+    x-enum-varnames:
+    - Forming
+host: localhost:3000
+info:
+  contact:
+    name: Kiselyov Vladimir
+  description: This is the server for the Tevian test task.
+  title: TevianTestTask API documentation
+  version: "1.0"
+paths:
+  /api/image/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads the image to the task
+      parameters:
+      - in: formData
+        name: name
+        type: string
+      - in: formData
+        name: task_id
+        type: string
+      - description: Uploaded image
+        in: formData
+        name: file
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/image.ResponseUploadImage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "423":
+          description: Locked
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Upload image
+      tags:
+      - image
+  /api/ping:
+    post:
+      description: Returns "pong" if the server is healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseCommon'
+      summary: Ping
+      tags:
+      - healthcheck
+  /api/task:
+    delete:
+      consumes:
+      - application/json
+      description: Delete task by ID
+      parameters:
+      - description: body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/task.RequestDeleteTask'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/task.ResponseDeleteTask'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "423":
+          description: Locked
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Delete task
+      tags:
+      - task
+    get:
+      consumes:
+      - application/json
+      description: Returns a task with statistics and a list of images and their data
+        on recognized faces
+      parameters:
+      - description: body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/task.RequestGetTask'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/task.ResponseGetTask'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get task
+      tags:
+      - task
+  /api/task/add:
+    post:
+      consumes:
+      - application/json
+      description: Creates a task with the passed name
+      parameters:
+      - description: body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/task.RequestAddTask'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/task.ResponseAddTask'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Add task
+      tags:
+      - task
+  /api/task/process:
+    post:
+      consumes:
+      - application/json
+      description: Processes images from the task and calculates statistics for the
+        task
+      parameters:
+      - description: body
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/task.RequestProcessTask'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/task.ResponseProcessTask'
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/task.ResponseProcessTask'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Process task
+      tags:
+      - task
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

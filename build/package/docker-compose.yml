@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  tevian_test_task:
+    build:
+      context: ../../.
+      dockerfile: build/package/Dockerfile
+    environment:
+      FACECLOUD_EMAIL: kiselyovvld@mail.ru
+      FACECLOUD_PASSWORD: Lesstenpound@159951
+      FACECLOUD_API_URL: https://backend.facecloud.tevian.ru/api
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16.4-alpine3.20
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: database
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
